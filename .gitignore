@@ -1,0 +1,36 @@
+# Compiled binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Go build cache and intermediate files
+*.o
+*.a
+
+# Dependency directories (if vendored)
+vendor/
+
+# IDE/editor files
+.vscode/
+.idea/
+*.swp
+*.suo
+*.user
+*.db
+*.DS_Store
+
+# Logs and temp
+*.log
+*.tmp
+
+# Coverage and profiling
+*.prof
+*.cov
+
+# Scripts
+*.bat
+*.sh
