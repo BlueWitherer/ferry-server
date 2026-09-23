@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/BlueWitherer/GDDataSyncServer/log"
+	"github.com/BlueWitherer/ferry-server/log"
 	"github.com/samber/mo"
 )
 
@@ -64,4 +64,8 @@ func WriteWebErr(w http.ResponseWriter, message string, code int) mo.Result[bool
 	}
 
 	return mo.Ok(true)
+}
+
+func WriteWebErrMethod(w http.ResponseWriter) mo.Result[bool] {
+	return WriteWebErr(w, "Method not allowed", http.StatusMethodNotAllowed)
 }

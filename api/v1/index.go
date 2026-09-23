@@ -3,8 +3,8 @@ package v1
 import (
 	"net/http"
 
-	"github.com/BlueWitherer/GDDataSyncServer/log"
-	"github.com/BlueWitherer/GDDataSyncServer/utils"
+	"github.com/BlueWitherer/ferry-server/log"
+	"github.com/BlueWitherer/ferry-server/utils"
 	"github.com/samber/mo"
 )
 

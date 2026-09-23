@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/BlueWitherer/GDDataSyncServer/log"
+	"github.com/BlueWitherer/ferry-server/log"
 )
 
 func init() {

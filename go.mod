@@ -1,4 +1,4 @@
-module github.com/BlueWitherer/GDDataSyncServer
+module github.com/BlueWitherer/ferry-server
 
 go 1.27.1
 

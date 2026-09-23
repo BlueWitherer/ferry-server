@@ -1,64 +1,63 @@
 package v1
 
 import (
-	"bytes"
-	"encoding/binary"
-	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 
-	"github.com/BlueWitherer/GDDataSyncServer/log"
-	"github.com/BlueWitherer/GDDataSyncServer/utils"
+	"github.com/BlueWitherer/ferry-server/access"
+	"github.com/BlueWitherer/ferry-server/utils"
+
 	"github.com/samber/mo"
 )
-
-func parseGameVarBody(data []byte) mo.Result[map[string]bool] {
-	buf := bytes.NewReader(data)
-
-	var size uint64
-	if err := binary.Read(buf, binary.LittleEndian, &size); err != nil {
-		log.Error("failed to read size: %v", err)
-		return mo.Err[map[string]bool](err)
-	}
-
-	res := make(map[string]bool)
-
-	for buf.Len() > 0 {
-		var strLen uint8
-		if err := binary.Read(buf, binary.LittleEndian, &strLen); err != nil {
-			return mo.Err[map[string]bool](err)
-		}
-
-		strBytes := make([]byte, strLen)
-		if _, err := buf.Read(strBytes); err != nil {
-			return mo.Err[map[string]bool](err)
-		}
-
-		var b bool
-		if err := binary.Read(buf, binary.LittleEndian, &b); err != nil {
-			return mo.Err[map[string]bool](err)
-		}
-
-		res[string(strBytes)] = b
-	}
-
-	fmt.Printf("Size: %d, Map: %+v\n", size, res)
-	return mo.Ok(res)
-}
 
 func init() {
 	http.HandleFunc("/v1/upload", func(w http.ResponseWriter, r *http.Request) { // geometry dash gamevars
 		header := w.Header()
 		utils.WriteHeaders(&header, http.MethodPost)
 
+		if r.Method != http.MethodPost {
+		}
+
+		q := r.URL.Query()
+
+		accStr := q.Get("account_id")
+
+		acc, err := strconv.Atoi(accStr)
+		if err != nil {
+			utils.WriteWebErr(w, "Failed to parse account ID", http.StatusBadRequest)
+			return
+		}
+
+		token := q.Get("authtoken")
+
+		userRes := access.ValidateArgonUser(&utils.ArgonUser{Account: acc, Token: token}, false)
+		if userRes.IsError() {
+			utils.WriteWebErr(w, userRes.Error().Error(), http.StatusUnauthorized)
+		}
+
+		user := userRes.MustGet()
+
 		body, err := io.ReadAll(r.Body)
 		if err != nil {
-			http.Error(w, "failed to read body", http.StatusInternalServerError)
+			utils.WriteWebErr(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 		defer r.Body.Close()
 
-		parseGameVarBody(body)
+		res := access.ParseGameVarBody(body)
+		if res.IsError() {
+			utils.WriteWebErr(w, res.Error().Error(), http.StatusBadRequest)
+			return
+		}
+
+		gvRes := access.R2WriteGameVars(user.Account, body)
+		if gvRes.IsError() {
+			utils.WriteWebErr(w, gvRes.Error().Error(), http.StatusBadRequest)
+			return
+		}
+
+		utils.WriteWebRes(w, mo.Some("Successfully created game settings save!"), http.StatusOK)
 	})
 
 	http.HandleFunc("/v1/upload-mods", func(w http.ResponseWriter, r *http.Request) { // all mod settings

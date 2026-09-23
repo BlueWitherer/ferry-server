@@ -10,9 +10,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/BlueWitherer/GDDataSyncServer/log"
+	"github.com/BlueWitherer/ferry-server/log"
 
-	_ "github.com/BlueWitherer/GDDataSyncServer/api"
+	_ "github.com/BlueWitherer/ferry-server/api"
 
 	"github.com/patrickmn/go-cache"
 	"golang.org/x/time/rate"

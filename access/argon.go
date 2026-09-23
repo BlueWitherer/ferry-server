@@ -8,8 +8,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/BlueWitherer/GDDataSyncServer/log"
-	"github.com/BlueWitherer/GDDataSyncServer/utils"
+	"github.com/BlueWitherer/ferry-server/log"
+	"github.com/BlueWitherer/ferry-server/utils"
 	"github.com/samber/mo"
 
 	"github.com/patrickmn/go-cache"
@@ -18,8 +18,9 @@ import (
 var argonCache = cache.New(15*time.Minute, 10*time.Minute)
 var invalids = cache.New(5*time.Minute, 10*time.Minute)
 
+var token string
+
 func getToken() (string, error) {
-	token := os.Getenv("ARGON_TOKEN")
 	if token == "" {
 		return "", fmt.Errorf("env for argon token is not defined!")
 	} else {
@@ -27,13 +28,13 @@ func getToken() (string, error) {
 	}
 }
 
-func ValidateArgonUser(user *utils.ArgonUser, strong bool) mo.Result[bool] {
-	if val, found := invalids.Get(fmt.Sprintf("%d", user.Account)); found {
-		return mo.Errf[bool]("Argon token %s is invalid", val.(string))
+func ValidateArgonUser(user *utils.ArgonUser, strong bool) mo.Result[utils.ArgonUser] {
+	if val, found := invalids.Get(fmt.Sprintf("%v", user.Account)); found {
+		return mo.Errf[utils.ArgonUser]("Argon token %s is invalid", val.(string))
 	}
 
-	if _, found := argonCache.Get(fmt.Sprintf("%d", user.Account)); found {
-		return mo.Ok(found)
+	if u, found := argonCache.Get(fmt.Sprintf("%v", user.Account)); found {
+		return mo.Ok(u.(utils.ArgonUser))
 	}
 
 	var authUrl string
@@ -45,7 +46,7 @@ func ValidateArgonUser(user *utils.ArgonUser, strong bool) mo.Result[bool] {
 
 	u, err := url.Parse(authUrl)
 	if err != nil {
-		return mo.Err[bool](err)
+		return mo.Err[utils.ArgonUser](err)
 	} else {
 		log.Trace("Argon URL parsed for account of ID %v", user.Account)
 	}
@@ -59,12 +60,12 @@ func ValidateArgonUser(user *utils.ArgonUser, strong bool) mo.Result[bool] {
 	}
 	u.RawQuery = q.Encode()
 
-	log.Trace("Argon validation parameters: account_id=%d (type check: %T), authtoken length=%d", user.Account, user.Account, len(user.Token))
+	log.Trace("Argon validation parameters: account_id=%v (type check: %T), authtoken length=%v", user.Account, user.Account, len(user.Token))
 	log.Trace("Full Argon URL being requested: %s", u.String())
 
 	req, err := http.NewRequest(http.MethodGet, u.String(), nil)
 	if err != nil {
-		return mo.Err[bool](err)
+		return mo.Err[utils.ArgonUser](err)
 	} else {
 		log.Trace("Argon request object constructed for account of ID %v", user.Account)
 	}
@@ -83,28 +84,35 @@ func ValidateArgonUser(user *utils.ArgonUser, strong bool) mo.Result[bool] {
 
 	resp, reqErr := client.Do(req)
 	if reqErr != nil {
-		return mo.Err[bool](reqErr)
+		return mo.Err[utils.ArgonUser](reqErr)
 	}
 	defer resp.Body.Close()
 
-	log.Trace("Argon status code received: %d, for account of ID %v", resp.StatusCode, user.Account)
+	log.Trace("Argon status code received: %v, for account of ID %v", resp.StatusCode, user.Account)
 
 	if resp.StatusCode != http.StatusOK {
-		return mo.Errf[bool]("argon server returned status code %d", resp.StatusCode)
+		return mo.Errf[utils.ArgonUser]("argon server returned status code %v", resp.StatusCode)
 	}
 
 	var valid utils.ArgonValidation
 	if err := json.NewDecoder(resp.Body).Decode(&valid); err != nil {
-		return mo.Errf[bool]("failed to parse argon response: %v", err)
+		return mo.Errf[utils.ArgonUser]("failed to parse argon response: %v", err)
 	} else {
 		log.Trace("Argon status of account of ID %v retrieved", user.Account)
 	}
 
 	if valid.Valid {
 		log.Info("Argon status of account of ID %v is valid", user.Account)
-		return mo.Ok(valid.Valid)
+		user.Token = ""
+
+		argonCache.Set(fmt.Sprintf("%v", user.Account), *user, cache.DefaultExpiration)
+		return mo.Ok(*user)
 	}
 
-	invalids.Set(fmt.Sprintf("%d", user.Account), user.Token, cache.DefaultExpiration)
-	return mo.Errf[bool]("cause: %s", valid.Cause)
+	invalids.Set(fmt.Sprintf("%v", user.Account), user.Token, cache.DefaultExpiration)
+	return mo.Errf[utils.ArgonUser]("cause: %s", valid.Cause)
+}
+
+func init() {
+	token = os.Getenv("ARGON_TOKEN")
 }
