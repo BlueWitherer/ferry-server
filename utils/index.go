@@ -26,6 +26,8 @@ func WriteWebRes[T any](w http.ResponseWriter, payload mo.Option[T], code int) m
 	if v, ok := payload.Get(); ok {
 		out.Payload = &v
 	} else {
+		out.Error = "Failed to encode response"
+
 		w.WriteHeader(code)
 		if err := json.NewEncoder(w).Encode(out); err != nil {
 			log.Error("Failed to encode response: %s", err.Error())
@@ -34,7 +36,7 @@ func WriteWebRes[T any](w http.ResponseWriter, payload mo.Option[T], code int) m
 			return mo.Err[bool](err)
 		}
 
-		return mo.Ok(true)
+		return mo.Errf[bool]("%s", out.Error)
 	}
 
 	w.WriteHeader(code)
