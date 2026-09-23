@@ -13,14 +13,20 @@ type WebRes[T any] struct {
 	Error   string `json:"error"`
 }
 
-func WriteHeaders(header *http.Header, method string) {
+func WriteHeaders(header *http.Header, method string, raw bool) {
 	header.Set("Access-Control-Allow-Origin", "*")
 	header.Set("Access-Control-Allow-Methods", method)
 	header.Set("Access-Control-Allow-Headers", "Content-Type")
-	header.Set("Content-Type", "application/json")
+
+	contentType := "application/json"
+	if raw {
+		contentType = "application/octet-stream"
+	}
+
+	header.Set("Content-Type", contentType)
 }
 
-func WriteWebRes[T any](w http.ResponseWriter, payload mo.Option[T], code int) mo.Result[bool] {
+func WriteWebRes[T any](w http.ResponseWriter, payload mo.Option[T], code int) mo.Result[T] {
 	var out WebRes[T]
 
 	if v, ok := payload.Get(); ok {
@@ -33,10 +39,10 @@ func WriteWebRes[T any](w http.ResponseWriter, payload mo.Option[T], code int) m
 			log.Error("Failed to encode response: %s", err.Error())
 			http.Error(w, "Failed to encode response", code)
 
-			return mo.Err[bool](err)
+			return mo.Err[T](err)
 		}
 
-		return mo.Errf[bool]("%s", out.Error)
+		return mo.Errf[T]("%s", out.Error)
 	}
 
 	w.WriteHeader(code)
@@ -44,13 +50,16 @@ func WriteWebRes[T any](w http.ResponseWriter, payload mo.Option[T], code int) m
 		log.Error("Failed to encode response: %s", err.Error())
 		http.Error(w, "Failed to encode response", code)
 
-		return mo.Err[bool](err)
+		return mo.Err[T](err)
 	}
 
-	return mo.Ok(true)
+	log.Info("%v: %v", code, *out.Payload)
+	return mo.Ok(*out.Payload)
 }
 
 func WriteWebErr(w http.ResponseWriter, message string, code int) mo.Result[bool] {
+	w.Header().Set("Content-Type", "application/json")
+
 	var out WebRes[bool]
 	out.Payload = nil
 	out.Error = message
@@ -63,6 +72,7 @@ func WriteWebErr(w http.ResponseWriter, message string, code int) mo.Result[bool
 		return mo.Err[bool](err)
 	}
 
+	log.Error("%v: %s", code, message)
 	return mo.Ok(true)
 }
 

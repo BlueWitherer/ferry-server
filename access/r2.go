@@ -70,7 +70,7 @@ func ParseGameVarBody(data []byte) mo.Result[map[string]bool] {
 		res[string(strBytes)] = b
 	}
 
-	log.Debug("Size: %v, Map: %+v\n", size, res)
+	log.Trace("Size: %v, Map: %+v\n", size, res)
 	return mo.Ok(res)
 }
 
@@ -117,8 +117,17 @@ func r2Write(key, name string, data []byte) mo.Result[bool] {
 	return mo.Ok(true)
 }
 
-func R2ReadGameVars(accountID int) mo.Result[map[string]bool] {
+func R2ReadGameVarsRaw(accountID int) mo.Result[[]byte] {
 	dataRes := r2Read(fmt.Sprintf("%v", accountID), "gv")
+	if dataRes.IsError() {
+		return mo.Err[[]byte](dataRes.Error())
+	}
+
+	return dataRes
+}
+
+func R2ReadGameVars(accountID int) mo.Result[map[string]bool] {
+	dataRes := R2ReadGameVarsRaw(accountID)
 	if dataRes.IsError() {
 		return mo.Err[map[string]bool](dataRes.Error())
 	}

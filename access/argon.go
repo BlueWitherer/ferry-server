@@ -15,8 +15,8 @@ import (
 	"github.com/patrickmn/go-cache"
 )
 
-var argonCache = cache.New(15*time.Minute, 10*time.Minute)
-var invalids = cache.New(5*time.Minute, 10*time.Minute)
+var argonCache = cache.New(3*time.Minute, 5*time.Minute)
+var invalids = cache.New(2*time.Minute, 3*time.Minute)
 
 var token string
 
@@ -29,8 +29,8 @@ func getToken() (string, error) {
 }
 
 func ValidateArgonUser(user *utils.ArgonUser, strong bool) mo.Result[utils.ArgonUser] {
-	if val, found := invalids.Get(fmt.Sprintf("%v", user.Account)); found {
-		return mo.Errf[utils.ArgonUser]("Argon token %s is invalid", val.(string))
+	if _, found := invalids.Get(user.Token); found {
+		return mo.Errf[utils.ArgonUser]("Argon token %s is invalid", user.Token)
 	}
 
 	if u, found := argonCache.Get(fmt.Sprintf("%v", user.Account)); found {
@@ -109,7 +109,7 @@ func ValidateArgonUser(user *utils.ArgonUser, strong bool) mo.Result[utils.Argon
 		return mo.Ok(*user)
 	}
 
-	invalids.Set(fmt.Sprintf("%v", user.Account), user.Token, cache.DefaultExpiration)
+	invalids.Set(user.Token, true, cache.DefaultExpiration)
 	return mo.Errf[utils.ArgonUser]("cause: %s", valid.Cause)
 }
 

@@ -5,6 +5,8 @@ import (
 	"net/http"
 
 	"github.com/BlueWitherer/ferry-server/log"
+
+	_ "github.com/BlueWitherer/ferry-server/api/v1"
 )
 
 func init() {
