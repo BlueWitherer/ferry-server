@@ -45,6 +45,13 @@ func ParseGameVarBody(data []byte) mo.Result[map[string]bool] {
 		return mo.Err[map[string]bool](err)
 	}
 
+	if size > 85 {
+		log.Error("Too many game variables (%s)", size)
+		return mo.Err[map[string]bool](fmt.Errorf("Too many variables"))
+	}
+
+	log.Debug("Game variable save size: %v", size)
+
 	res := make(map[string]bool)
 
 	for buf.Len() > 0 {
