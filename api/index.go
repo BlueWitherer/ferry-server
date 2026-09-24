@@ -1,12 +1,14 @@
 package api
 
 import (
-	"fmt"
 	"net/http"
 
-	"github.com/BlueWitherer/ferry-server/log"
+	"ferry-srv/log"
+	"ferry-srv/utils"
 
-	_ "github.com/BlueWitherer/ferry-server/api/v1"
+	"github.com/samber/mo"
+
+	_ "ferry-srv/api/v1"
 )
 
 func init() {
@@ -16,16 +18,10 @@ func init() {
 			return
 		}
 
-		log.Debug("API server pinged!")
+		log.Trace("API server pinged!")
 
 		header := w.Header()
-
-		header.Set("Access-Control-Allow-Origin", "*")
-		header.Set("Access-Control-Allow-Methods", http.MethodGet)
-		header.Set("Access-Control-Allow-Headers", "Content-Type")
-		header.Set("Content-Type", "text/plain")
-
-		w.WriteHeader(http.StatusOK)
-		fmt.Fprint(w, "Game Data Sync master API service")
+		utils.WriteHeaders(&header, http.MethodGet, false)
+		utils.WriteWebRes(w, mo.Some("Ferry master API service"), http.StatusOK)
 	})
 }

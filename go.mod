@@ -1,4 +1,4 @@
-module github.com/BlueWitherer/ferry-server
+module ferry-srv
 
 go 1.27.1
 

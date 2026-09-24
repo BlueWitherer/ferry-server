@@ -8,29 +8,31 @@ import (
 	"os"
 	"time"
 
-	"github.com/BlueWitherer/ferry-server/log"
-	"github.com/BlueWitherer/ferry-server/utils"
+	"ferry-srv/log"
+	"ferry-srv/utils"
+
 	"github.com/samber/mo"
 
 	"github.com/patrickmn/go-cache"
 )
 
+// i dont wanna spam the server lowkey...
 var argonCache = cache.New(3*time.Minute, 5*time.Minute)
 var invalids = cache.New(2*time.Minute, 3*time.Minute)
 
-var token string
+var rlToken string
 
 func getToken() (string, error) {
-	if token == "" {
-		return "", fmt.Errorf("env for argon token is not defined!")
+	if rlToken == "" {
+		return "", fmt.Errorf("env for argon ratelimit token is not defined!")
 	} else {
-		return token, nil
+		return rlToken, nil
 	}
 }
 
 func ValidateArgonUser(user *utils.ArgonUser, strong bool) mo.Result[utils.ArgonUser] {
 	if _, found := invalids.Get(user.Token); found {
-		return mo.Errf[utils.ArgonUser]("Argon token %s is invalid", user.Token)
+		return mo.Errf[utils.ArgonUser]("Argon ratelimit token %s is invalid", user.Token)
 	}
 
 	if u, found := argonCache.Get(fmt.Sprintf("%v", user.Account)); found {
@@ -74,7 +76,7 @@ func ValidateArgonUser(user *utils.ArgonUser, strong bool) mo.Result[utils.Argon
 
 	argon, err := getToken()
 	if err != nil {
-		log.Warn("Failed to get Argon API token: %s", err.Error())
+		log.Warn("Failed to get Argon API rlToken: %s", err.Error())
 	} else {
 		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", argon))
 	}
@@ -114,5 +116,5 @@ func ValidateArgonUser(user *utils.ArgonUser, strong bool) mo.Result[utils.Argon
 }
 
 func init() {
-	token = os.Getenv("ARGON_TOKEN")
+	rlToken = os.Getenv("ARGON_TOKEN")
 }

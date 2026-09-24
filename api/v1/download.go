@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/BlueWitherer/ferry-server/access"
-	"github.com/BlueWitherer/ferry-server/log"
-	"github.com/BlueWitherer/ferry-server/utils"
+	"ferry-srv/access"
+	"ferry-srv/log"
+	"ferry-srv/utils"
 )
 
 func init() {

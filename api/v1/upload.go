@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/BlueWitherer/ferry-server/access"
-	"github.com/BlueWitherer/ferry-server/log"
-	"github.com/BlueWitherer/ferry-server/utils"
+	"ferry-srv/access"
+	"ferry-srv/log"
+	"ferry-srv/utils"
 
 	"github.com/samber/mo"
 )
@@ -66,13 +66,17 @@ func init() {
 		log.Info("Successfully uploaded game settings save data for account of ID %v", user.Account)
 	})
 
+	// coming soon, just lazy rn
+
 	http.HandleFunc("/api/v1/upload-mods", func(w http.ResponseWriter, r *http.Request) { // all mod settings
 		header := w.Header()
 		utils.WriteHeaders(&header, http.MethodPost, false)
+		http.NotFound(w, r)
 	})
 
-	http.HandleFunc("/api/v1/upload-mods-saves", func(w http.ResponseWriter, r *http.Request) { // all mod save data (supporter only probably)
+	http.HandleFunc("/api/v1/upload-mods-saves", func(w http.ResponseWriter, r *http.Request) { // all mod save data (to be supporter-only)
 		header := w.Header()
 		utils.WriteHeaders(&header, http.MethodPost, false)
+		http.NotFound(w, r)
 	})
 }

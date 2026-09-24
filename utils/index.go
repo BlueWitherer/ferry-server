@@ -4,7 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/BlueWitherer/ferry-server/log"
+	"ferry-srv/log"
+
 	"github.com/samber/mo"
 )
 

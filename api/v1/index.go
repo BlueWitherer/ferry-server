@@ -3,8 +3,8 @@ package v1
 import (
 	"net/http"
 
-	"github.com/BlueWitherer/ferry-server/log"
-	"github.com/BlueWitherer/ferry-server/utils"
+	"ferry-srv/log"
+	"ferry-srv/utils"
 
 	"github.com/samber/mo"
 )
