@@ -51,6 +51,6 @@ func init() {
 			utils.WriteWebErr(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		log.Info("Streamed game settings save data for account of ID %v", user.Account)
+		log.Info("Successfully streamed game settings save data for account of ID %v", user.Account)
 	})
 }
