@@ -22,8 +22,8 @@ jobs:
 
             - uses: actions/upload-artifact@v7
               with:
-                  name: ferry_srv-linux
-                  path: ferry_srv
+                  name: ferry-srv-linux
+                  path: ferry-srv
 
     nightly:
         name: Nightly Release
