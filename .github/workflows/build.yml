@@ -25,22 +25,6 @@ jobs:
                   name: ferry_srv-linux
                   path: ferry_srv
 
-    docker:
-        name: "Build and Push Docker Image"
-        runs-on: ubuntu-latest
-        needs: ["build"]
-        permissions:
-            packages: write
-            contents: read
-        steps:
-            - uses: actions/checkout@v6
-
-            - name: Download binary artifact
-              uses: actions/download-artifact@v8
-              with:
-                  name: ferry_srv-linux
-                  path: .
-
     nightly:
         name: Nightly Release
         runs-on: ubuntu-latest
