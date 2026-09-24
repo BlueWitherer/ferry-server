@@ -118,12 +118,7 @@ func r2Write(key, name string, data []byte) mo.Result[bool] {
 }
 
 func R2ReadGameVarsRaw(accountID int) mo.Result[[]byte] {
-	dataRes := r2Read(fmt.Sprintf("%v", accountID), "gv")
-	if dataRes.IsError() {
-		return mo.Err[[]byte](dataRes.Error())
-	}
-
-	return dataRes
+	return r2Read(fmt.Sprintf("%v", accountID), "gv")
 }
 
 func R2ReadGameVars(accountID int) mo.Result[map[string]bool] {

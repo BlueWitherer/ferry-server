@@ -49,6 +49,7 @@ func init() {
 		w.WriteHeader(http.StatusOK)
 		if _, err := w.Write(gvRes.MustGet()); err != nil {
 			utils.WriteWebErr(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 		log.Info("Streamed game settings save data for account of ID %v", user.Account)
 	})
