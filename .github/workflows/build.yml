@@ -1,0 +1,74 @@
+name: Build Ferry Server
+
+on:
+    push:
+        branches: [main]
+    pull_request:
+
+jobs:
+    build:
+        name: "Compile Go Binary"
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v6
+
+            - name: Setup Go
+              uses: actions/setup-go@v7
+              with:
+                  go-version: "1.27"
+
+            - name: Build
+              run: go build
+
+            - uses: actions/upload-artifact@v7
+              with:
+                  name: ferry_srv-linux
+                  path: ferry_srv
+
+    docker:
+        name: "Build and Push Docker Image"
+        runs-on: ubuntu-latest
+        needs: ["build"]
+        permissions:
+            packages: write
+            contents: read
+        steps:
+            - uses: actions/checkout@v6
+
+            - name: Download binary artifact
+              uses: actions/download-artifact@v8
+              with:
+                  name: ferry_srv-linux
+                  path: .
+
+    nightly:
+        name: Nightly Release
+        runs-on: ubuntu-latest
+        needs: ["build"]
+        permissions:
+            contents: write
+
+        steps:
+            - uses: actions/download-artifact@v8
+              with:
+                  path: ./artifacts/
+                  merge-multiple: true
+
+            - name: Get latest release tag
+              id: getrelease
+              run: echo "tag=$(curl -s https://api.github.com/repos/${{ github.event.repository.full_name }}/releases/latest | jq -r '.tag_name // "${{ github.event.repository.default_branch }}"')" >> $GITHUB_OUTPUT
+
+            - name: Publish Nightly release
+              id: publish-nightly
+              if: ${{ github.ref_name == github.event.repository.default_branch }}
+              uses: andelf/nightly-release@v1
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              with:
+                  tag_name: nightly
+                  name: "Development Release"
+                  body: |
+                      **Development build for commit ${{ github.sha }}**.
+                      > [`View Current Changes`](${{ github.event.repository.html_url }}/compare/${{ steps.getrelease.outputs.tag }}...nightly)
+                  files: |
+                      ./artifacts/**/*
