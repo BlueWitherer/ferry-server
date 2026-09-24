@@ -10,6 +10,15 @@ import (
 )
 
 func init() {
+	http.HandleFunc("/api", func(w http.ResponseWriter, r *http.Request) {
+		log.Debug("API endpoint pinged!")
+
+		header := w.Header()
+		utils.WriteHeaders(&header, http.MethodGet, false)
+
+		utils.WriteWebRes(w, mo.Some("Pong!"), http.StatusOK)
+	})
+
 	http.HandleFunc("/api/v1", func(w http.ResponseWriter, r *http.Request) {
 		log.Debug("v1 API pinged!")
 
