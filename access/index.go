@@ -45,7 +45,7 @@ func ParseGameVarBody(data []byte) mo.Result[map[string]bool] {
 		return mo.Err[map[string]bool](err)
 	}
 
-	if size > 85 {
+	if size > 160 {
 		log.Error("Too many game variables (%s)", size)
 		return mo.Err[map[string]bool](fmt.Errorf("Too many variables"))
 	}
