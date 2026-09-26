@@ -44,9 +44,21 @@ func init() {
 			return
 		}
 
+		bytes := gvRes.MustGet()
+
+		log.Trace("Decompressing data for %v...", user.Account)
+
+		decompressedRes := utils.DecompressZstd(bytes)
+		if decompressedRes.IsError() {
+			log.Error("Failed to decompress data for %v: %s", user.Account, decompressedRes.Error())
+		} else if decompressedRes.IsOk() {
+			log.Debug("Successfully decompressed data for %v", user.Account)
+			bytes = decompressedRes.MustGet()
+		}
+
 		log.Debug("Streaming game settings save data for account of ID %v...", user.Account)
 		w.WriteHeader(http.StatusOK)
-		if _, err := w.Write(gvRes.MustGet()); err != nil {
+		if _, err := w.Write(bytes); err != nil {
 			utils.WriteWebErr(w, err.Error(), http.StatusInternalServerError)
 			return
 		}

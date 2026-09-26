@@ -48,14 +48,7 @@ func init() {
 		}
 		defer r.Body.Close()
 
-		decompressedRes := utils.DecompressZstd(body)
-		if decompressedRes.IsError() {
-			utils.WriteWebErr(w, "Invalid compressed payload", http.StatusBadRequest)
-			return
-		}
-		decompressed := decompressedRes.MustGet()
-
-		res := access.ParseGameVarBody(decompressed)
+		res := access.ParseGameVarBody(body)
 		if res.IsError() {
 			utils.WriteWebErr(w, res.Error().Error(), http.StatusBadRequest)
 			return
@@ -63,7 +56,9 @@ func init() {
 
 		log.Debug("Uploading game settings save data for account of ID %v...", user.Account)
 
-		gvRes := access.R2WriteGameVars(user.Account, body)
+		bytes := utils.CompressZstd(body)
+
+		gvRes := access.R2WriteGameVars(user.Account, bytes)
 		if gvRes.IsError() {
 			utils.WriteWebErr(w, gvRes.Error().Error(), http.StatusBadRequest)
 			return
