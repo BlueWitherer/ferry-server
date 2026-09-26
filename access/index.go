@@ -15,8 +15,10 @@ import (
 	"github.com/samber/mo"
 )
 
-var client *minio.Client
-var bucket string
+var (
+	client *minio.Client
+	bucket string
+)
 
 func getR2Client() mo.Result[*minio.Client] {
 	if client != nil {

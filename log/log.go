@@ -8,8 +8,10 @@ import (
 	"time"
 )
 
-var LogLevel int = 1
-var wg sync.WaitGroup
+var (
+	LogLevel int = 1
+	wg       sync.WaitGroup
+)
 
 const (
 	reset  = "\033[0m"

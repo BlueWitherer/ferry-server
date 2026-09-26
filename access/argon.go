@@ -17,10 +17,12 @@ import (
 )
 
 // i dont wanna spam the server lowkey...
-var argonCache = cache.New(3*time.Minute, 5*time.Minute)
-var invalids = cache.New(2*time.Minute, 3*time.Minute)
+var (
+	argonCache = cache.New(3*time.Minute, 5*time.Minute)
+	invalids   = cache.New(2*time.Minute, 3*time.Minute)
 
-var rlToken string
+	rlToken string
+)
 
 func getToken() (string, error) {
 	if rlToken == "" {

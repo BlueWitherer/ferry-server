@@ -36,7 +36,6 @@ func init() {
 			utils.WriteWebErr(w, userRes.Error().Error(), http.StatusUnauthorized)
 			return
 		}
-
 		user := userRes.MustGet()
 
 		gvRes := access.R2ReadGameVarsRaw(user.Account)

@@ -39,7 +39,6 @@ func init() {
 			utils.WriteWebErr(w, userRes.Error().Error(), http.StatusUnauthorized)
 			return
 		}
-
 		user := userRes.MustGet()
 
 		body, err := io.ReadAll(r.Body)
@@ -49,13 +48,21 @@ func init() {
 		}
 		defer r.Body.Close()
 
-		res := access.ParseGameVarBody(body)
+		decompressedRes := utils.DecompressZstd(body)
+		if decompressedRes.IsError() {
+			utils.WriteWebErr(w, "Invalid compressed payload", http.StatusBadRequest)
+			return
+		}
+		decompressed := decompressedRes.MustGet()
+
+		res := access.ParseGameVarBody(decompressed)
 		if res.IsError() {
 			utils.WriteWebErr(w, res.Error().Error(), http.StatusBadRequest)
 			return
 		}
 
 		log.Debug("Uploading game settings save data for account of ID %v...", user.Account)
+
 		gvRes := access.R2WriteGameVars(user.Account, body)
 		if gvRes.IsError() {
 			utils.WriteWebErr(w, gvRes.Error().Error(), http.StatusBadRequest)
