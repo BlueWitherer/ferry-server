@@ -56,9 +56,7 @@ func init() {
 
 		log.Debug("Uploading game settings save data for account of ID %v...", user.Account)
 
-		bytes := utils.CompressZstd(body)
-
-		gvRes := access.R2WriteGameVars(user.Account, bytes)
+		gvRes := access.R2WriteGameVars(user.Account, body)
 		if gvRes.IsError() {
 			utils.WriteWebErr(w, gvRes.Error().Error(), http.StatusBadRequest)
 			return
@@ -68,15 +66,61 @@ func init() {
 		log.Info("Successfully uploaded game settings save data for account of ID %v", user.Account)
 	})
 
-	// coming soon, just lazy rn
+	http.HandleFunc("/api/v1/upload-geode", func(w http.ResponseWriter, r *http.Request) { // geode settings
+		header := w.Header()
+		utils.WriteHeaders(&header, http.MethodPost, false)
 
-	http.HandleFunc("/api/v1/upload-mods", func(w http.ResponseWriter, r *http.Request) { // all mod settings
+		if r.Method != http.MethodPost {
+			utils.WriteWebErrMethod(w)
+			return
+		}
+
+		q := r.URL.Query()
+
+		accStr := q.Get("account_id")
+
+		acc, err := strconv.Atoi(accStr)
+		if err != nil {
+			utils.WriteWebErr(w, "Failed to parse account ID", http.StatusBadRequest)
+			return
+		}
+
+		token := q.Get("authtoken")
+
+		userRes := access.ValidateArgonUser(&utils.ArgonUser{Account: acc, Token: token}, false)
+		if userRes.IsError() {
+			utils.WriteWebErr(w, userRes.Error().Error(), http.StatusUnauthorized)
+			return
+		}
+		user := userRes.MustGet()
+
+		body, err := io.ReadAll(io.LimitReader(r.Body, 4<<10))
+		if err != nil {
+			utils.WriteWebErr(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		defer r.Body.Close()
+
+		log.Debug("Uploading Geode loader settings save data for account of ID %v...", user.Account)
+
+		gvRes := access.R2WriteGeodeSettings(user.Account, body)
+		if gvRes.IsError() {
+			utils.WriteWebErr(w, gvRes.Error().Error(), http.StatusBadRequest)
+			return
+		}
+
+		utils.WriteWebRes(w, mo.Some("Successfully uploaded Geode loader settings save data!"), http.StatusOK)
+		log.Info("Successfully uploaded Geode loader settings save data for account of ID %v", user.Account)
+	})
+
+	// coming soon, just lazy rn
+	http.HandleFunc("/api/v1/upload-geode-mods", func(w http.ResponseWriter, r *http.Request) { // all mod settings
 		header := w.Header()
 		utils.WriteHeaders(&header, http.MethodPost, false)
 		http.NotFound(w, r)
 	})
 
-	http.HandleFunc("/api/v1/upload-mods-saves", func(w http.ResponseWriter, r *http.Request) { // all mod save data (to be supporter-only)
+	http.HandleFunc("/api/v1/upload-geode-mods-saves", func(w http.ResponseWriter, r *http.Request) { // all mod save data (to be supporter-only)
 		header := w.Header()
 		utils.WriteHeaders(&header, http.MethodPost, false)
 		http.NotFound(w, r)

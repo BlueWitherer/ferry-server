@@ -9,6 +9,7 @@ import (
 	"os"
 
 	"ferry-srv/log"
+	"ferry-srv/utils"
 
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
@@ -103,10 +104,17 @@ func r2Read(key, name string) mo.Result[[]byte] {
 		return mo.Err[[]byte](err)
 	}
 
+	decompressedRes := utils.ZstdDecompress(b)
+	if decompressedRes.IsOk() {
+		b = decompressedRes.MustGet()
+	}
+
 	return mo.Ok(b)
 }
 
 func r2Write(key, name string, data []byte) mo.Result[bool] {
+	data = utils.ZstdCompress(data)
+
 	cRes := getR2Client()
 	if cRes.IsError() {
 		return mo.Err[bool](cRes.Error())
@@ -141,6 +149,14 @@ func R2ReadGameVars(accountID int) mo.Result[map[string]bool] {
 
 func R2WriteGameVars(accountID int, data []byte) mo.Result[bool] {
 	return r2Write(fmt.Sprintf("%v", accountID), "gv", data)
+}
+
+func R2ReadGeodeSettings(accountID int) mo.Result[[]byte] {
+	return r2Read(fmt.Sprintf("%v", accountID), "geode")
+}
+
+func R2WriteGeodeSettings(accountID int, data []byte) mo.Result[bool] {
+	return r2Write(fmt.Sprintf("%v", accountID), "geode", data)
 }
 
 func init() {
