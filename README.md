@@ -1,5 +1,5 @@
 # [<img src="https://raw.githubusercontent.com/BlueWitherer/Ferry/refs/heads/main/logo.png" width="25" alt="Ferry's logo." />](https://geode-sdk.org/mods/cheeseworks.ferry) Ferry Server
-Sync your game client settings!
+Back up your game client settings!
 
 ---
 
