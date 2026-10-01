@@ -74,11 +74,11 @@ func ValidateArgonUser(user *utils.ArgonUser, strong bool) mo.Result[utils.Argon
 		log.Trace("Argon request object constructed for account of ID %v", user.Account)
 	}
 
-	req.Header.Set("User-Agent", "GDDataSync/1.0")
+	req.Header.Set("User-Agent", "ModComments/1.0")
 
 	argon, err := getToken()
 	if err != nil {
-		log.Warn("Failed to get Argon API rlToken: %s", err.Error())
+		log.Warn("Failed to get Argon API ratelimit token: %s", err.Error())
 	} else {
 		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", argon))
 	}
@@ -118,5 +118,5 @@ func ValidateArgonUser(user *utils.ArgonUser, strong bool) mo.Result[utils.Argon
 }
 
 func init() {
-	rlToken = os.Getenv("ARGON_TOKEN")
+	rlToken = os.Getenv("ARGON")
 }
