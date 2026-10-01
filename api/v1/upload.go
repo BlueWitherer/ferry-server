@@ -35,6 +35,13 @@ func init() {
 		}
 		defer r.Body.Close()
 
+		log.Trace(
+			"Game settings upload for %v size: %d bytes (%.2f KiB)",
+			user.Account,
+			len(body),
+			float64(len(body))/1024,
+		)
+
 		res := access.ParseGameVarBody(body)
 		if res.IsError() {
 			utils.WriteWebErr(w, res.Error().Error(), http.StatusBadRequest)
@@ -76,6 +83,13 @@ func init() {
 		}
 		defer r.Body.Close()
 
+		log.Trace(
+			"Geode settings upload for %v size: %d bytes (%.2f KiB)",
+			user.Account,
+			len(body),
+			float64(len(body))/1024,
+		)
+
 		log.Debug("Uploading Geode loader settings save data for account of ID %v...", user.Account)
 
 		geodeRes := access.R2WriteGeodeSettings(user.Account, body)
@@ -104,12 +118,19 @@ func init() {
 		}
 		user := userRes.MustGet()
 
-		body, err := io.ReadAll(io.LimitReader(r.Body, 2<<20))
+		body, err := io.ReadAll(io.LimitReader(r.Body, 1<<20))
 		if err != nil {
 			utils.WriteWebErr(w, err.Error(), http.StatusRequestEntityTooLarge)
 			return
 		}
 		defer r.Body.Close()
+
+		log.Trace(
+			"Mod settings upload for %v size: %d bytes (%.2f KiB)",
+			user.Account,
+			len(body),
+			float64(len(body))/1024,
+		)
 
 		log.Debug("Uploading mods' settings save data for account of ID %v...", user.Account)
 
