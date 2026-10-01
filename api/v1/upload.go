@@ -3,7 +3,6 @@ package v1
 import (
 	"io"
 	"net/http"
-	"strconv"
 
 	"ferry-srv/access"
 	"ferry-srv/log"
@@ -22,28 +21,16 @@ func init() {
 			return
 		}
 
-		q := r.URL.Query()
-
-		accStr := q.Get("account_id")
-
-		acc, err := strconv.Atoi(accStr)
-		if err != nil {
-			utils.WriteWebErr(w, "Failed to parse account ID", http.StatusBadRequest)
-			return
-		}
-
-		token := q.Get("authtoken")
-
-		userRes := access.ValidateArgonUser(&utils.ArgonUser{Account: acc, Token: token}, false)
+		userRes, code := authUser(r)
 		if userRes.IsError() {
-			utils.WriteWebErr(w, userRes.Error().Error(), http.StatusUnauthorized)
+			utils.WriteWebErr(w, userRes.Error().Error(), code)
 			return
 		}
 		user := userRes.MustGet()
 
 		body, err := io.ReadAll(r.Body)
 		if err != nil {
-			utils.WriteWebErr(w, err.Error(), http.StatusBadRequest)
+			utils.WriteWebErr(w, err.Error(), http.StatusRequestEntityTooLarge)
 			return
 		}
 		defer r.Body.Close()
@@ -75,37 +62,25 @@ func init() {
 			return
 		}
 
-		q := r.URL.Query()
-
-		accStr := q.Get("account_id")
-
-		acc, err := strconv.Atoi(accStr)
-		if err != nil {
-			utils.WriteWebErr(w, "Failed to parse account ID", http.StatusBadRequest)
-			return
-		}
-
-		token := q.Get("authtoken")
-
-		userRes := access.ValidateArgonUser(&utils.ArgonUser{Account: acc, Token: token}, false)
+		userRes, code := authUser(r)
 		if userRes.IsError() {
-			utils.WriteWebErr(w, userRes.Error().Error(), http.StatusUnauthorized)
+			utils.WriteWebErr(w, userRes.Error().Error(), code)
 			return
 		}
 		user := userRes.MustGet()
 
 		body, err := io.ReadAll(io.LimitReader(r.Body, 4<<10))
 		if err != nil {
-			utils.WriteWebErr(w, err.Error(), http.StatusBadRequest)
+			utils.WriteWebErr(w, err.Error(), http.StatusRequestEntityTooLarge)
 			return
 		}
 		defer r.Body.Close()
 
 		log.Debug("Uploading Geode loader settings save data for account of ID %v...", user.Account)
 
-		gvRes := access.R2WriteGeodeSettings(user.Account, body)
-		if gvRes.IsError() {
-			utils.WriteWebErr(w, gvRes.Error().Error(), http.StatusBadRequest)
+		geodeRes := access.R2WriteGeodeSettings(user.Account, body)
+		if geodeRes.IsError() {
+			utils.WriteWebErr(w, geodeRes.Error().Error(), http.StatusBadRequest)
 			return
 		}
 
@@ -113,16 +88,45 @@ func init() {
 		log.Info("Successfully uploaded Geode loader settings save data for account of ID %v", user.Account)
 	})
 
-	// coming soon, just lazy rn
 	http.HandleFunc("/api/v1/upload-geode-mods", func(w http.ResponseWriter, r *http.Request) { // all mod settings
 		header := w.Header()
 		utils.WriteHeaders(&header, http.MethodPost, false)
-		http.NotFound(w, r)
+
+		if r.Method != http.MethodPost {
+			utils.WriteWebErrMethod(w)
+			return
+		}
+
+		userRes, code := authUser(r)
+		if userRes.IsError() {
+			utils.WriteWebErr(w, userRes.Error().Error(), code)
+			return
+		}
+		user := userRes.MustGet()
+
+		body, err := io.ReadAll(io.LimitReader(r.Body, 2<<20))
+		if err != nil {
+			utils.WriteWebErr(w, err.Error(), http.StatusRequestEntityTooLarge)
+			return
+		}
+		defer r.Body.Close()
+
+		log.Debug("Uploading mods' settings save data for account of ID %v...", user.Account)
+
+		modsRes := access.R2WriteModsSettings(user.Account, body)
+		if modsRes.IsError() {
+			utils.WriteWebErr(w, modsRes.Error().Error(), http.StatusBadRequest)
+			return
+		}
+
+		utils.WriteWebRes(w, mo.Some("Successfully uploaded mods' settings save data!"), http.StatusOK)
+		log.Info("Successfully uploaded mods' settings save data for account of ID %v", user.Account)
 	})
 
-	http.HandleFunc("/api/v1/upload-geode-mods-saves", func(w http.ResponseWriter, r *http.Request) { // all mod save data (to be supporter-only)
-		header := w.Header()
-		utils.WriteHeaders(&header, http.MethodPost, false)
-		http.NotFound(w, r)
-	})
+	// coming soon, just lazy rn
+	// http.HandleFunc("/api/v1/upload-geode-mods-saves", func(w http.ResponseWriter, r *http.Request) { // all mod save data (to be supporter-only)
+	// 	header := w.Header()
+	// 	utils.WriteHeaders(&header, http.MethodPost, false)
+	// 	http.NotFound(w, r)
+	// })
 }

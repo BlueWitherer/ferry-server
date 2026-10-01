@@ -159,6 +159,14 @@ func R2WriteGeodeSettings(accountID int, data []byte) mo.Result[bool] {
 	return r2Write(fmt.Sprintf("%v", accountID), "geode", data)
 }
 
+func R2ReadModsSettings(accountID int) mo.Result[[]byte] {
+	return r2Read(fmt.Sprintf("%v", accountID), "mods")
+}
+
+func R2WriteModsSettings(accountID int, data []byte) mo.Result[bool] {
+	return r2Write(fmt.Sprintf("%v", accountID), "mods", data)
+}
+
 func init() {
 	bucket = os.Getenv("R2_BUCKET")
 }
