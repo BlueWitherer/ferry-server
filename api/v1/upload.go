@@ -118,7 +118,7 @@ func init() {
 		}
 		user := userRes.MustGet()
 
-		body, err := io.ReadAll(io.LimitReader(r.Body, 128<<10))
+		body, err := io.ReadAll(io.LimitReader(r.Body, 64<<10))
 		if err != nil {
 			utils.WriteWebErr(w, err.Error(), http.StatusRequestEntityTooLarge)
 			return
