@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"encoding/json"
 	"io"
 	"net/http"
 
@@ -133,6 +134,46 @@ func init() {
 		)
 
 		log.Debug("Uploading mods' settings save data for account of ID %v...", user.Account)
+
+		jsonRes := access.ParseModsSettingsBody(body)
+		if jsonRes.IsError() {
+			utils.WriteWebErr(w, jsonRes.Error().Error(), http.StatusBadRequest)
+			return
+		}
+
+		existing := access.R2ReadModsSettings(user.Account)
+		if existing.IsOk() {
+			log.Debug("Found existing mod settings save for user %v", user.Account)
+
+			saved := jsonRes.MustGet()
+			newSaveRes := access.ParseModsSettingsBody(existing.MustGet())
+
+			if newSaveRes.IsOk() {
+				for key, val := range newSaveRes.MustGet() {
+					_, ok := saved[key]
+					if !ok {
+						log.Trace("Adding missing '%s' mod settings for user %v", key, user.Account)
+						saved[key] = val
+					}
+				}
+			}
+
+			b, err := json.Marshal(saved)
+			if err != nil {
+				utils.WriteWebErr(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			log.Debug("Merging settings for user %v", user.Account)
+
+			size := len(b)
+			if size < 64<<10 {
+				log.Debug("Mod settings save is within limits (%.2f KiB)", float64(size)/1024)
+				body = b
+			} else {
+				log.Warn("Mod settings save exceeds 64 KiB limit (%.2f KiB) for user %v, skipping merge", float64(size)/1024, user.Account)
+			}
+		}
 
 		modsRes := access.R2WriteModsSettings(user.Account, body)
 		if modsRes.IsError() {

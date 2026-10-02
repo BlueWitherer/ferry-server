@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -165,6 +166,14 @@ func R2ReadModsSettings(accountID int) mo.Result[[]byte] {
 
 func R2WriteModsSettings(accountID int, data []byte) mo.Result[bool] {
 	return r2Write(fmt.Sprintf("%v", accountID), "mods", data)
+}
+
+func ParseModsSettingsBody(data []byte) mo.Result[map[string]any] {
+	var out map[string]any
+	if err := json.Unmarshal(data, &out); err != nil {
+		return mo.Err[map[string]any](err)
+	}
+	return mo.Ok(out)
 }
 
 func init() {
