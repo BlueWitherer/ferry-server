@@ -1,5 +1,5 @@
 {
-    "name": "mod-comments-server",
+    "name": "ferry-srv",
     "version": "0.0.1",
     "scripts": {
         "build": "go build -o ../server",
