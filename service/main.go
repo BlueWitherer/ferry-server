@@ -6,10 +6,12 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strings"
 	"syscall"
 	"time"
 
+	"ferry-srv/access"
 	"ferry-srv/log"
 
 	_ "ferry-srv/api"
@@ -67,6 +69,30 @@ func main() {
 		Addr:    fmt.Sprintf(":%s", port),
 		Handler: rateLimitMiddleware(http.DefaultServeMux),
 	}
+
+	log.Trace("Setting up SPA fallback for client-side routing")
+	staticDir := "./dist"
+	fs := http.FileServer(http.Dir(staticDir))
+
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		log.Debug("Received request for host %s", access.FullURL(r))
+
+		requestedPath := strings.TrimPrefix(filepath.Clean(r.URL.Path), "/")
+		fullPath := filepath.Join(staticDir, requestedPath)
+		if requestedPath == "" || requestedPath == "." {
+			http.ServeFile(w, r, filepath.Join(staticDir, "index.html"))
+			return
+		}
+
+		info, err := os.Stat(fullPath)
+		if err == nil && !info.IsDir() {
+			fs.ServeHTTP(w, r)
+			return
+		}
+
+		log.Trace("Serving index.html for SPA route: %s", r.URL.Path)
+		http.ServeFile(w, r, filepath.Join(staticDir, "index.html"))
+	})
 
 	go func() {
 		defer func() {

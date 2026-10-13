@@ -1,36 +1,36 @@
-# Compiled binaries
-*.exe
-*.exe~
-*.dll
-*.so
-*.dylib
-*.test
-*.out
+*.zip
 
-# Go build cache and intermediate files
-*.o
-*.a
-
-# Dependency directories (if vendored)
-vendor/
-
-# IDE/editor files
-.vscode/
-.idea/
-*.swp
-*.suo
-*.user
-*.db
-*.DS_Store
-
-# Logs and temp
+# Logs
+logs
 *.log
-*.tmp
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
-# Coverage and profiling
-*.prof
-*.cov
+# Build dependencies
+node_modules
+dist
+dist-ssr
+*.local
+build
+*.env
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 
 # Scripts
-*.bat
 *.sh
+*.bat
+
+# Ignore build
+build/*
