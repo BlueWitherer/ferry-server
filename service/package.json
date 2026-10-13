@@ -1,0 +1,9 @@
+{
+    "name": "mod-comments-server",
+    "version": "0.0.1",
+    "scripts": {
+        "build": "go build -o ../server",
+        "dev": "go run ./",
+        "start": "cd ../ && server.exe"
+    }
+}
