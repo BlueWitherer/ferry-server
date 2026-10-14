@@ -81,7 +81,7 @@ function App() {
                     <IconButton
                         className="social-button"
                         component="a"
-                        href="https://www.github.com/BlueWitherer/moddev-branding-site/"
+                        href="https://www.github.com/BlueWitherer/"
                         target="_blank"
                         rel="noopener noreferrer"
                         aria-label="GitHub"
