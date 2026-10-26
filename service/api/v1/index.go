@@ -23,7 +23,7 @@ func authUser(r *http.Request) (mo.Result[utils.ArgonUser], int) {
 
 	token := q.Get("authtoken")
 
-	userRes := access.ValidateArgonUser(&utils.ArgonUser{Account: acc, Token: token}, false)
+	userRes := access.ValidateArgonUser(&utils.ArgonUser{Account: acc, Token: token}, false, 1)
 	if userRes.IsError() {
 		return userRes, http.StatusUnauthorized
 	}

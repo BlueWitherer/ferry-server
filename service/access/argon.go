@@ -32,7 +32,21 @@ func getToken() (string, error) {
 	}
 }
 
-func ValidateArgonUser(user *utils.ArgonUser, strong bool) mo.Result[utils.ArgonUser] {
+func argonUrl(ver uint8, endpoint string) string {
+	var base string
+
+	switch ver {
+	default:
+	case 1:
+		base = "https://argon.globed.dev/v1"
+	case 2:
+		base = "https://argon-dev.globed.dev/v1"
+	}
+
+	return fmt.Sprintf("%s%s", base, endpoint)
+}
+
+func ValidateArgonUser(user *utils.ArgonUser, strong bool, ver uint8) mo.Result[utils.ArgonUser] {
 	if _, found := invalids.Get(user.Token); found {
 		return mo.Errf[utils.ArgonUser]("Argon ratelimit token %s is invalid", user.Token)
 	}
@@ -43,9 +57,9 @@ func ValidateArgonUser(user *utils.ArgonUser, strong bool) mo.Result[utils.Argon
 
 	var authUrl string
 	if strong {
-		authUrl = "https://argon.globed.dev/v1/validation/check-strong"
+		authUrl = argonUrl(ver, "/validation/check-strong")
 	} else {
-		authUrl = "https://argon.globed.dev/v1/validation/check"
+		authUrl = argonUrl(ver, "/validation/check")
 	}
 
 	u, err := url.Parse(authUrl)
