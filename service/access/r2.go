@@ -40,7 +40,7 @@ func getR2Client() mo.Result[*minio.Client] {
 	return mo.Ok(c)
 }
 
-func ParseGameVarBody(data []byte) mo.Result[map[string]bool] {
+func ParseGameVarBody(data []byte, max mo.Option[uint64]) mo.Result[map[string]bool] {
 	buf := bytes.NewReader(data)
 
 	var size uint64
@@ -49,7 +49,7 @@ func ParseGameVarBody(data []byte) mo.Result[map[string]bool] {
 		return mo.Err[map[string]bool](err)
 	}
 
-	if size > 160 {
+	if max.IsSome() && size > max.MustGet() {
 		log.Error("Too many game variables (%s)", size)
 		return mo.Err[map[string]bool](fmt.Errorf("Too many variables"))
 	}
@@ -145,7 +145,7 @@ func R2ReadGameVars(accountID int) mo.Result[map[string]bool] {
 		return mo.Err[map[string]bool](dataRes.Error())
 	}
 
-	return ParseGameVarBody(dataRes.MustGet())
+	return ParseGameVarBody(dataRes.MustGet(), mo.None[uint64]())
 }
 
 func R2WriteGameVars(accountID int, data []byte) mo.Result[bool] {

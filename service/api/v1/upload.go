@@ -43,7 +43,7 @@ func init() {
 			float64(len(body))/1024,
 		)
 
-		res := access.ParseGameVarBody(body)
+		res := access.ParseGameVarBody(body, mo.Some(uint64(160)))
 		if res.IsError() {
 			utils.WriteWebErr(w, res.Error().Error(), http.StatusBadRequest)
 			return
